@@ -5,9 +5,11 @@ namespace LegacyApp
     public class UserService
     {
         private DateTime _dateTimeNow;
+        private ClientRepository _clientRepository;
 
-        public UserService(DateTime? now = null)
+        public UserService(DateTime? now = null, ClientRepository clientRepository = null)
         {
+            _clientRepository = clientRepository ?? new ClientRepository();
             _dateTimeNow = now ?? DateTime.Now;
         }
         
@@ -32,8 +34,7 @@ namespace LegacyApp
                 return false;
             }
 
-            var clientRepository = new ClientRepository();
-            var client = clientRepository.GetById(clientId);
+            var client = _clientRepository.GetById(clientId);
 
             var user = new User
                                {
