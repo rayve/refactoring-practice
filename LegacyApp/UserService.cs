@@ -4,13 +4,13 @@ namespace LegacyApp
 {
     public class UserService
     {
-        private DateTime _dateTimeNow;
+        private Func<DateTime> _dateTimeNow;
         private ClientRepository _clientRepository;
 
-        public UserService(DateTime? now = null, ClientRepository clientRepository = null)
+        public UserService(Func<DateTime> now = null, ClientRepository clientRepository = null)
         {
             _clientRepository = clientRepository ?? new ClientRepository();
-            _dateTimeNow = now ?? DateTime.Now;
+            _dateTimeNow = now ?? (() => DateTime.Now);
         }
         
         public bool AddUser(string firname, string surname, string email, DateTime dateOfBirth, int clientId)
@@ -25,7 +25,7 @@ namespace LegacyApp
                 return false;
             }
             
-            var now = _dateTimeNow;
+            var now = _dateTimeNow();
             int age = now.Year - dateOfBirth.Year;
             if (now.Month < dateOfBirth.Month || (now.Month == dateOfBirth.Month && now.Day < dateOfBirth.Day)) age--;
 
