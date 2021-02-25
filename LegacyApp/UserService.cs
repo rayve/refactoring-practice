@@ -6,11 +6,15 @@ namespace LegacyApp
     {
         private Func<DateTime> _dateTimeNow;
         private ClientRepository _clientRepository;
+        private UserCreditServiceClient _userCreditServiceClient;
+        private Action<User> _userDataAccessAddUser;
 
-        public UserService(Func<DateTime> now = null, ClientRepository clientRepository = null)
+        public UserService(Func<DateTime> now = null, ClientRepository clientRepository = null, UserCreditServiceClient userCreditServiceClient = null, Action<User> userDataAccessAddUser = null)
         {
             _clientRepository = clientRepository ?? new ClientRepository();
             _dateTimeNow = now ?? (() => DateTime.Now);
+            _userCreditServiceClient = userCreditServiceClient ?? new UserCreditServiceClient();
+            _userDataAccessAddUser = userDataAccessAddUser ?? ((user) => UserDataAccess.AddUser(user));
         }
         
         public bool AddUser(string firname, string surname, string email, DateTime dateOfBirth, int clientId)
@@ -54,7 +58,7 @@ namespace LegacyApp
             {
                 // Do credit check and double credit limit
                 user.HasCreditLimit = true;
-                using (var userCreditService = new UserCreditServiceClient())
+                using (var userCreditService = _userCreditServiceClient)
                 {
                     var creditLimit = userCreditService.GetCreditLimit(user.Firstname, user.Surname, user.DateOfBirth);
                     creditLimit = creditLimit*2;
@@ -65,7 +69,7 @@ namespace LegacyApp
             {
                 // Do credit check
                 user.HasCreditLimit = true;
-                using (var userCreditService = new UserCreditServiceClient())
+                using (var userCreditService = _userCreditServiceClient)
                 {
                     var creditLimit = userCreditService.GetCreditLimit(user.Firstname, user.Surname, user.DateOfBirth);
                     user.CreditLimit = creditLimit;
@@ -77,7 +81,7 @@ namespace LegacyApp
                 return false;
             }
 
-            UserDataAccess.AddUser(user);
+            _userDataAccessAddUser(user);
 
             return true;
         }
