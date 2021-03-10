@@ -5,11 +5,11 @@ namespace LegacyApp
     public class UserService
     {
         private Func<DateTime> _dateTimeNow;
-        private ClientRepository _clientRepository;
-        private UserCreditServiceClient _userCreditServiceClient;
+        private IClientRepository _clientRepository;
+        private IUserCreditService _userCreditServiceClient;
         private Action<User> _userDataAccessAddUser;
 
-        public UserService(Func<DateTime> now = null, ClientRepository clientRepository = null, UserCreditServiceClient userCreditServiceClient = null, Action<User> userDataAccessAddUser = null)
+        public UserService(Func<DateTime> now = null, IClientRepository clientRepository = null, IUserCreditService userCreditServiceClient = null, Action<User> userDataAccessAddUser = null)
         {
             _clientRepository = clientRepository ?? new ClientRepository();
             _dateTimeNow = now ?? (() => DateTime.Now);
@@ -58,22 +58,17 @@ namespace LegacyApp
             {
                 // Do credit check and double credit limit
                 user.HasCreditLimit = true;
-                using (var userCreditService = _userCreditServiceClient)
-                {
-                    var creditLimit = userCreditService.GetCreditLimit(user.Firstname, user.Surname, user.DateOfBirth);
-                    creditLimit = creditLimit*2;
-                    user.CreditLimit = creditLimit;
-                }
+                
+                var creditLimit = _userCreditServiceClient.GetCreditLimit(user.Firstname, user.Surname, user.DateOfBirth);
+                creditLimit = creditLimit*2;
+                user.CreditLimit = creditLimit;
             }
             else
             {
                 // Do credit check
                 user.HasCreditLimit = true;
-                using (var userCreditService = _userCreditServiceClient)
-                {
-                    var creditLimit = userCreditService.GetCreditLimit(user.Firstname, user.Surname, user.DateOfBirth);
-                    user.CreditLimit = creditLimit;
-                }
+                var creditLimit = _userCreditServiceClient.GetCreditLimit(user.Firstname, user.Surname, user.DateOfBirth);
+                user.CreditLimit = creditLimit;
             }
 
             if (user.HasCreditLimit && user.CreditLimit < 500)
